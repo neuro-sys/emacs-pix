@@ -4,8 +4,14 @@
 ;; Keywords: pixel, bitmap, raster graphics, drawing, paint
 ;; Homepage: http://github.com/neuro-sys/emacs-pix
 
+;;;; Commentary:
 ;; This package provides a set of functions to create XPM images to
 ;; display bitmap graphics inside Emacs.
+
+;;;; TODO:
+;; - Add other graphics primitives: Circle, rectangle with filled options
+;; - A better draw function than the current pix-flip-buffer
+;; - Demo for a rotating cube
 
 (defun make-pix (width height colors)
   "Creates an instance of pix session for a drawable canvas"
@@ -27,48 +33,36 @@
           )))
 
 (defsubst pix-width (item) (aref item 0))
-
 (defsubst pix-height (item) (aref item 1))
-
 (defsubst pix-colors (item) (aref item 2))
-
 (defsubst pix--palette-size (item) (aref item 3))
-
 (defsubst pix--xpm-val-len (item) (aref item 4))
-
 (defsubst pix--buffer-stride (item) (aref item 5))
-
 (defsubst pix--xpm-pixel-fmt (item) (aref item 6))
-
 (defsubst pix--buffer (item) (aref item 7))
-
 (defsubst pix--data-offset (item) (aref item 8))
-
 (defsubst pix--set-buffer (item newelt) (aset item 7 newelt))
-
 (defsubst pix--set-data-offset (item newelt) (aset item 8 newelt))
-
 (defun pix--get-palette-size (colors) (length colors))
-
 (defun pix--get-xpm-val-len (palette-size) (length (format "%x" palette-size)))
-
 (defun pix--get-buffer-stride (xpm-val-len width) (+ 4 (* xpm-val-len width)))
-
 (defun pix--get-pixel-fmt (xpm-val-len) (format "%%.%dx" xpm-val-len))
 
+(defconst pix--xpm-header-string-format "/* XPM */\n\
+static char * test_xpm[] = {\n\
+\"%d %d %d %d\",\
+")
+
 (defun pix--create-xpm-color-data (colors xpm-pixel-fmt)
-  "Return RGB colors in the format
-\"a c #FF00FF\",\
-\"b c #FF0000\",\
-"
-  (let ((i -1))
-    (mapconcat (lambda (c)
-                 (progn
-                   (setq i (1+ i))
-                   (let ((col (format xpm-pixel-fmt i)))
-                     (format "\"%s c #%.2X%.2X%.2X\"," col (elt c 0) (elt c 1) (elt c 2)))))
-               colors
-               "\n")))
+  "Return RGB colors in the format XPM expects"
+  (let ((i -1)
+        (buffer))
+    (dolist (c colors)
+      (setq i (1+ i))
+      (let* ((col (format xpm-pixel-fmt i))
+             (line (format "\"%s c #%.2X%.2X%.2X\"," col (elt c 0) (elt c 1) (elt c 2))))
+        (setq buffer (concat buffer line "\n"))))
+    buffer))
 
 (defun pix--create-xpm-image-data (width height xpm-val-len)
   (let ((buf))
@@ -77,11 +71,7 @@
     buf))
 
 (defun pix-create-xpm-data (item)
-  (let* ((header-data (format "\
-/* XPM */\n\
-static char * test_xpm[] = {\n\
-\"%d %d %d %d\",\
-"
+  (let* ((header-data (format pix--xpm-header-string-format
                               (pix-width item)
                               (pix-height item)
                               (pix--palette-size item)
@@ -167,3 +157,4 @@ static char * test_xpm[] = {\n\
   (pix-init item)
   (pix-draw-line item 10 15 123 54 1)
   (pix-flip-buffer item))
+
