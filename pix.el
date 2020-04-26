@@ -10,10 +10,9 @@
 
 ;;;; TODO:
 ;; - Add other graphics primitives: Circle, rectangle with filled options
-;; - A better draw function than the current pix-flip-buffer
 ;; - Demo for a rotating cube
 
-(defun make-pix (width height colors)
+(defun make-pix (width height colors scale-factor)
   "Creates an instance of pix session for a drawable canvas"
   (let* ((palette-size (pix--get-palette-size colors))
          (xpm-val-len (pix--get-xpm-val-len palette-size))
@@ -24,6 +23,7 @@
   (vector width
           height
           colors
+          scale-factor
           palette-size
           xpm-val-len
           buffer-stride
@@ -35,14 +35,15 @@
 (defsubst pix-width (item) (aref item 0))
 (defsubst pix-height (item) (aref item 1))
 (defsubst pix-colors (item) (aref item 2))
-(defsubst pix--palette-size (item) (aref item 3))
-(defsubst pix--xpm-val-len (item) (aref item 4))
-(defsubst pix--buffer-stride (item) (aref item 5))
-(defsubst pix--xpm-pixel-fmt (item) (aref item 6))
-(defsubst pix--buffer (item) (aref item 7))
-(defsubst pix--data-offset (item) (aref item 8))
-(defsubst pix--set-buffer (item newelt) (aset item 7 newelt))
-(defsubst pix--set-data-offset (item newelt) (aset item 8 newelt))
+(defsubst pix-scale-factor (item) (aref item 3))
+(defsubst pix--palette-size (item) (aref item 4))
+(defsubst pix--xpm-val-len (item) (aref item 5))
+(defsubst pix--buffer-stride (item) (aref item 6))
+(defsubst pix--xpm-pixel-fmt (item) (aref item 7))
+(defsubst pix--buffer (item) (aref item 8))
+(defsubst pix--data-offset (item) (aref item 9))
+(defsubst pix--set-buffer (item newelt) (aset item 8 newelt))
+(defsubst pix--set-data-offset (item newelt) (aset item 9 newelt))
 (defun pix--get-palette-size (colors) (length colors))
 (defun pix--get-xpm-val-len (palette-size) (length (format "%x" palette-size)))
 (defun pix--get-buffer-stride (xpm-val-len width) (+ 4 (* xpm-val-len width)))
@@ -88,7 +89,7 @@ static char * test_xpm[] = {\n\
 (defun pix-propertize (item)
   (propertize " "
               'display
-              (create-image (pix--buffer item) 'xpm t)))
+              (create-image (pix--buffer item) 'xpm t :scale (pix-scale-factor item))))
 
 (defun pix-insert (item)
   (insert
@@ -144,14 +145,14 @@ static char * test_xpm[] = {\n\
         (pix--draw-line-high item x1 y1 x0 y0 ink)
       (pix--draw-line-high item x0 y0 x1 y1 ink))))
 
-(defun pix-init (width height colors)
-  (let ((item (make-pix width height colors)))
+(defun pix-init (width height colors scale-factor)
+  (let ((item (make-pix width height colors scale-factor)))
     (pix--set-buffer item (pix-create-xpm-data item))
     item))
 
 (provide 'pix)
 
 ;;;; Example
-;; (let* ((item (pix-init 320 200 (list '(#x00 #x00 #x00) '(#xFF #xFF #xFF)))))
-;;   (pix-draw-line item 10 15 123 54 1)
-;;   (pix-insert item))
+(let* ((item (pix-init 160 100 (list '(#x00 #x00 #x00) '(#xFF #xFF #xFF)) 4.0)))
+  (pix-draw-line item 10 15 123 54 1)
+  (pix-insert item))
