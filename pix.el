@@ -85,18 +85,14 @@ static char * test_xpm[] = {\n\
     (pix--set-data-offset item (1+ (length header-color-data)))
     (concat header-color-data "\n" image-data "};\n")))
 
-(defun pix-flip-buffer (item)
-  ;; TODO - currently inserts a display object into the current buffer.
-  ;; (setq buffer-read-only nil)
-  ;; (erase-buffer)
+(defun pix-propertize (item)
+  (propertize " "
+              'display
+              (create-image (pix--buffer item) 'xpm t)))
+
+(defun pix-insert (item)
   (insert
-   (propertize " "
-               'display
-               (create-image (pix--buffer item) 'xpm t)))
-  (insert "\n")
-  ;; (deactivate-mark)
-  ;; (setq buffer-read-only t)
-)
+   (pix-propertize item)))
 
 (defsubst pix-put-pixel (item x y ink)
   (let* ((offset (+ (pix--data-offset item)
@@ -148,13 +144,14 @@ static char * test_xpm[] = {\n\
         (pix--draw-line-high item x1 y1 x0 y0 ink)
       (pix--draw-line-high item x0 y0 x1 y1 ink))))
 
-(defun pix-init (item)
-  (pix--set-buffer item (pix-create-xpm-data item)))
+(defun pix-init (width height colors)
+  (let ((item (make-pix width height colors)))
+    (pix--set-buffer item (pix-create-xpm-data item))
+    item))
 
 (provide 'pix)
 
-(let* ((item (make-pix 320 200 (list '(#x00 #x00 #x00) '(#xFF #xFF #xFF)))))
-  (pix-init item)
-  (pix-draw-line item 10 15 123 54 1)
-  (pix-flip-buffer item))
-
+;;;; Example
+;; (let* ((item (pix-init 320 200 (list '(#x00 #x00 #x00) '(#xFF #xFF #xFF)))))
+;;   (pix-draw-line item 10 15 123 54 1)
+;;   (pix-insert item))
