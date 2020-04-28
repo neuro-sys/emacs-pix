@@ -10,7 +10,6 @@
 
 ;;;; TODO:
 ;; - Add other graphics primitives: Circle, rectangle with filled options
-;; - Demo for a rotating cube
 
 (defun make-pix (width height colors scale-factor)
   "Creates an instance of pix session for a drawable canvas"
