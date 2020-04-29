@@ -16,23 +16,23 @@
 
 (defsubst clamp (a min-a max-a) (max (min a max-a) min-a))
 
-(defun draw-rectangle (item p0 p1 p2 p3 ink)
-  (pix-draw-line item
+(defun draw-rectangle (pix p0 p1 p2 p3 ink)
+  (pix-draw-line pix
                  (truncate (p-x p0))
                  (truncate (p-y p0))
                  (truncate (p-x p1))
                  (truncate (p-y p1)) ink)
-  (pix-draw-line item
+  (pix-draw-line pix
                  (truncate (p-x p1))
                  (truncate (p-y p1))
                  (truncate (p-x p2))
                  (truncate (p-y p2)) ink)
-  (pix-draw-line item
+  (pix-draw-line pix
                  (truncate (p-x p2))
                  (truncate (p-y p2))
                  (truncate (p-x p3))
                  (truncate (p-y p3)) ink)
-  (pix-draw-line item
+  (pix-draw-line pix
                  (truncate (p-x p3))
                  (truncate (p-y p3))
                  (truncate (p-x p0))
@@ -74,19 +74,18 @@
                    0 (1- height))
             0.0)))
 
-(defun draw-rectangle-with-perspective (item quad ink)
-  (let* ((d (/ (pix-width item) 2.0))
-         (width (pix-width item))
-         (height (pix-height item))
+(defun draw-rectangle-with-perspective (pix quad ink)
+  (let* ((d (/ (pix-width pix) 2.0))
+         (width (pix-width pix))
+         (height (pix-height pix))
          (p0 (p-proj (aref quad 0) width height))
          (p1 (p-proj (aref quad 1) width height))
          (p2 (p-proj (aref quad 2) width height))
          (p3 (p-proj (aref quad 3) width height)))
-    (draw-rectangle item p0 p1 p2 p3 ink)))
+    (draw-rectangle pix p0 p1 p2 p3 ink)))
 
-(defun draw-cube ()
-  (let* ((item (pix-init 160 100 (list '(#x00 #x00 #x00) '(#xFF #xFF #xFF)) 4.0))
-         (trans-v (make-p 0.0 0.0 -2.5))
+(defun draw-cube (pix)
+  (let* ((trans-v (make-p 0.0 0.0 -2.5))
          (vertices (list
                     (vector (make-p -0.5 0.5 -0.5)
                             (make-p -0.5 -0.5 -0.5)
@@ -124,18 +123,21 @@
                (p-0 (p-rot-z (p-rot-y (p-rot-x p cube-r) cube-r) cube-r))
                (p-1 (p-trans p-0 trans-v)))
           (aset quad i p-1)))
-      (draw-rectangle-with-perspective item quad 1))
-  (pix-insert item)))
+      (draw-rectangle-with-perspective pix quad 1))
+  (pix-insert pix)))
 
 (defun cube-run ()
   (interactive)
+  (defvar pix)
+  (setq pix (pix-init 160 100 (list '(#x00 #x00 #x00) '(#xFF #xFF #xFF)) 4.0))
   (defvar cube-timer nil)
   (if (timerp cube-timer) (cancel-timer cube-timer))
   (setq cube-timer (run-at-time nil 0.05
                                 (lambda ()
                                   (with-current-buffer (get-buffer-create "cube")
                                     (erase-buffer)
-                                    (draw-cube)
+                                    (pix-fill-rectangle pix 0 0 160 100 0)
+                                    (draw-cube pix)
                                     (setq cube-r (+ cube-r 0.1))
                                     (deactivate-mark)))))
   (add-hook 'kill-buffer-hook (lambda () (cancel-timer cube-timer)))

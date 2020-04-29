@@ -1,9 +1,9 @@
 # pix.el
 Emacs lisp helper for drawing XPM images and displaying them.
 
-## Example
+Example usage:
 
-```
+```el
 (require 'pix)
 
 (let ((pix-buf (pix-init 320 200 (list '(#x00 #x33 #x66) '(#x00 #xFF #x00)) 2.0)))
@@ -11,10 +11,6 @@ Emacs lisp helper for drawing XPM images and displaying them.
   (pix-insert pix-buf))
 ```
 
-will insert:
-
-![simple-demo](./simple-demo.png)
-
-## More example
+## Demo
 ![cube-demo](./emacs-pix.gif)
 
